@@ -1,0 +1,777 @@
+    10  HOME:
+        PRINT "WAIT...":
+        GOTO 80
+    40  REM  ==== JUMP TABLE ====
+    45  REM 
+    60  GOTO 00225: REM  T=ARCTAN(A/B)
+    62  GOTO 00410: REM  PLACE_MARKER(X0,Y0)
+    64  GOTO 09151: REM  OP%=GET_OPTION(OP$)
+    68  GOTO 04810: REM  MENU_VOICE(K$,T$,C8%)
+    69  GOTO 01310: REM  NU=FLOAT_INPUT()
+    70  GOTO 01121: REM  DRAW_SCREEN(W%,H%,WS%,HS%)
+    71  GOTO 00505: REM  FIRE(A0,Q0,V0,MM%,CH%)
+    72  GOTO 04706: REM  HEADER(T$,C8%)
+    73  GOTO 01710: REM  FRIENDLY_INPUT(OL,MN,MX)
+    74  GOTO 05310: REM  INFORMATION()
+    75  GOTO 05243: REM  SWITCH_40_80(C8%) 
+    76  GOTO 05030: REM  WELCOME()
+    77  GOTO 07010: REM  OPEN_OLD_EXPERIMENT()
+    78  GOTO 11111: REM  INITIALIZE()
+    80  GOTO 06020: REM  MAIN()
+    81  GOTO 01910: REM  TC=COMULATIVE_CHARGE()
+    82  GOTO 01535: REM  PLACE_CHARGE(CH%,HI%)
+    83  GOTO 03010: REM  SOLVE(F[],CH%)
+    85  GOTO 08005: REM  GET_DISK_AND_SLOT()
+    88  GOTO 05500: REM  CTRL_C_HANDLER() 
+    90  GOTO 01800: REM  MAIN_MENU()
+    92  GOTO 05405: REM  ERROR_HANDLER()
+    94  GOTO 01608: REM  DISPLAY_MARKERS(F[],HI%,CH%)
+    95  GOTO 07509: REM  SAVE_GAME()
+    99  GOTO 09999: REM  END_GAME()
+   210  REM 
+   220  REM  T=ARCTAN(A/B)
+   221  REM 
+   225  IF B = ZR
+          GOTO 290
+   234  IF A = ZR AND B < ZR THEN 
+          LET T = PI:
+          RETURN
+   240  LET T = ATN(A / B)
+   250  IF B > = ZR AND A > = ZR THEN 
+          RETURN
+   260  IF B < ZR THEN 
+          LET T = PI + T:
+          RETURN
+   280  LET T = DP + T:
+        RETURN
+   290  IF A > ZR THEN 
+          LET T = P2:
+          RETURN
+   300  LET T = PI + P2:
+        RETURN
+   399  REM 
+   400  REM  PLACE_MARKER(X0,Y0)
+   401  REM  
+   410  LET PX% = FNPX(X0):
+        LET PY% = FNPY(Y0)
+   420  IF PX% > W% THEN 
+          LET PX% = W% - 1
+   430  IF PY% > H% THEN 
+          LET PY% = H% - 1
+   432  FOR I = 1 TO 20
+   434    IF I / 2 = INT(I / 2) THEN 
+            HCOLOR=CO%:
+            GOTO 440
+   435    HCOLOR=0
+   440    HPLOT PX%,PY%:
+          HPLOT PX% + 1,PY%
+   450    LET PY% = PY% + 1:
+          HPLOT PX%,PY%:
+          HPLOT PX% + 1,PY%
+   452    LET PY% = PY% - 1
+   454    FOR I3 = 1 TO 20
+   455  NEXT I3,I
+   460  RETURN
+   500  REM 
+   501  REM  FIRE(A0,Q0,V0,MM%,CH%)
+   502  REM 
+   505  LET PX  = 0:
+        LET PY  = 0
+   507  LET CX% = 0:
+        LET CY% = 1:
+        LET QN% = 2
+   508  LET TS1 = MM% / 3
+   510  LET VX  = V0 * COS(A0)
+   515  LET VY  = V0 * SIN(A0)
+   516  GOSUB 81:
+        LET QT = QT + INT(Q0 * 10000) / 10000
+   519  PRINT :
+        PRINT "* STARTING EXPERIMENT #";EN
+   520  PRINT "* ";:
+        IF Q0 > 0 THEN 
+          PRINT "POSITIVE";:
+          GOTO 522
+   521  IF Q < 0 THEN 
+          PRINT "NEGATIVE";
+   522  PRINT " CHARGE INJECTED IN CHAMBER"
+   523  PRINT "* SPEED.VECT M=";V0;" P="; FNRD(A0);", M(QT)=";TC
+   525  FOR H = 1 TO MM%
+   530    LET FX = 0:
+          LET FY = 0
+   540    FOR I = 1 TO CH%
+   545      LET X1 = F(I,CX%):
+            LET Y1 = F(I,CY%):
+            LET Q1 = F(I,QN%)
+   550      LET B  = X1 - PX:
+            LET A  = Y1 - PY
+   555      LET D2 = A ^ 2 + B ^ 2
+   560      GOSUB 60
+   565      LET R  = - Q1 * Q0 / D2
+   570      LET FX = FX + R * COS(T)
+   575      LET FY = FY + R * SIN(T)
+   580    NEXT I
+   585    LET VX = VX + FX
+   590    LET VY = VY + FY
+   595    LET PX = PX + VX
+   600    LET PY = PY + VY
+   610    LET SX = 1:
+          LET SY = 1
+   620    IF PX > - SX AND PX < SX THEN 
+            SX = FNPX(PX)
+   630    IF PY > - SY AND PY < SY THEN 
+            SY = FNPY(PY)
+   635    IF H > TS1 THEN 
+            GOSUB 730
+   660    HPLOT SX,SY
+   665    IF ABS(PX) > = 1 OR ABS(PY) > = 1
+            GOTO 695
+   680  NEXT H
+   685  PRINT "* CHARGE VANISHED, TTL REACHED"
+   690  GOTO 700
+   695  PRINT "* CHARGE EXITED FROM THE CHAMBER"
+   699  PRINT "* EXPERIMENT ENDED"
+   700  PRINT "* PRESS [SPACE] TO RETURN ":
+        OP$ = " ":
+        GOSUB 64
+   710  RETURN
+   725  GOSUB 66
+   730  IF TS1 = > MM% / 3 AND TS1 < MM% * 2 / 3 THEN 
+          PRINT "* CHARGE IS AT 30% OF ITS LIFE CYCLE":
+          TS1 = MM% * 2 / 3:
+          RETURN
+   735  IF TS1 > = 2 * MM% / 3 THEN 
+          PRINT "* CHARGE REACHED 66% OF ITS LIFE":
+          LET TS1 = MM%
+   740  RETURN
+  1119  REM  
+  1120  REM  DRAW_SCREEN(W%,H%,WS%,HS%)
+  1121  REM  
+  1123  HGR:
+        HOME:
+        HCOLOR=CO%
+  1125  VTAB 21
+  1131  HPLOT ZR,ZR TO ZR,H%
+  1141  HPLOT ZR,ZR TO W%,ZR
+  1151  HPLOT W%,H% TO ZR,H%
+  1161  HPLOT W%,H% TO W%,ZR
+  1171  FOR J = 1 TO 9
+  1181    HPLOT J * WS%,ZR TO J * WS%,4
+  1191    HPLOT J * WS%,H% TO J * WS%,H% - 4
+  1211  NEXT J
+  1221  FOR J = 1 TO 5
+  1231    HPLOT ZR,J * WS% TO 4,J * WS%
+  1241    HPLOT W%,J * WS% TO W% - 4,J * WS%
+  1251  NEXT J
+  1255  RETURN
+  1300  REM  
+  1301  REM  NU=FLOAT_INPUT(OL$)
+  1302  REM  
+  1310  LET NN$ = CHR$(127) + CHR$(8) + CHR$(13) + "01234567890+-."
+  1311  LET SS% = 0:
+        LET EE% = 0:
+        PRINT "_"; CHR$(8);
+  1312  LET OP$ = NN$:
+        LET NU$ = "":
+        LET NU  = 0.0
+  1313  GOSUB 1400
+  1315  LET OP$ = NN$ + "E"
+  1320  GOSUB 1400
+  1325  IF S$ < > "E"
+          GOTO 1320
+  1326  LET EE% = 1
+  1330  LET OP$ = NN$
+  1332  GOSUB 1400
+  1334  LET SS% = 1
+  1337  LET OP$ = LEFT$(NN$,12)
+  1340  GOSUB 1400
+  1345  IF NOT EE%
+          GOTO 1315
+  1348  IF NOT SS%
+          GOTO 1330
+  1350  GOTO 1340
+  1400  GOSUB 64:
+        IF OP% < ZR THEN 
+          LET NU$ = "":
+          POP:
+          RETURN
+  1405  IF OP% < 3 THEN 
+          GOSUB 1450:
+          GOTO 1420
+  1410  IF OP% = 3 THEN 
+          POP:
+          GOTO 1480
+  1415  LET S$ = MID$(OP$,OP%,1)
+  1420  PRINT S$;"_"; CHR$(8);
+  1425  LET NU$ = NU$ + S$
+  1430  RETURN
+  1450  REM   - DELETE A CHAR AND UPDATE FLAGS 
+  1455  LET L% = LEN(NU$)
+  1457  IF L% = 0 THEN 
+          LET S$ = "":
+          RETURN
+  1460  LET S$ = RIGHT$(NU$,1):
+        IF L% = 1 THEN 
+          LET NU$ = "":
+          GOTO 1462
+  1461  LET NU$ = LEFT$(NU$,L% - 1)
+  1462  IF S$ = "E" THEN 
+          LET EE% = 0
+  1465  IF (S$ = "+" OR S$ = "-") AND EE% THEN 
+          LET SS% = 0:
+          GOTO 1469
+  1466  IF L% > 1 AND RIGHT$(NU$,1) = "E" THEN 
+          SS% = 0
+  1469  LET S$ = ""
+  1470  PRINT " "; CHR$(8); CHR$(8);"_"; CHR$(8);
+  1475  RETURN
+  1480  PRINT " ":
+        IF NU$ = "" THEN 
+          NU = OL:
+          RETURN
+  1485  LET NU = VAL(NU$):
+        RETURN
+  1500  REM  
+  1510  REM  PLACE_CHARGES(CH%)
+  1520  REM  
+  1535  PRINT "ALLOCATING CHARGES ";
+  1541  FOR C = 1 TO CH%
+  1551    LET F(C,0) = RND(1) * 2 - 1
+  1561    LET F(C,1) = RND(1) * 2 - 1
+  1563    IF ABS(F(C,0)) + ABS(F(C,1)) = 0 THEN 
+            1551
+  1565    LET F(C,2) = INT( RND(1) * 3) - 1
+  1566    IF F(C,2) = 0
+            GOTO 1565
+  1581  NEXT C
+  1591  RETURN
+  1600  REM      
+  1601  REM  DISPLAY_MARKERS(F[], CH%, HI%)
+  1602  REM  
+  1608  IF HI% THEN 
+          RETURN
+  1610  FOR K = 1 TO CH%
+  1615    LET X0 = F(K,0):
+          LET Y0 = F(K,1):
+          GOSUB 62
+  1620  NEXT K
+  1630  RETURN
+  1700  REM 
+  1701  REM  NU=FRIENDY_INPUT(OL,MN,MX)
+  1702  REM  
+  1710  :
+  1717  PRINT N%;" [";MN;",";MX;"] (";OL;"):";:
+        GOSUB 69
+  1720  IF NU < MN THEN 
+          PRINT "* TOO LOW":
+          GOTO 1717
+  1725  IF NU > MX THEN 
+          PRINT "* TOO HIGH":
+          GOTO 1717
+  1730  RETURN
+  1800  REM  
+  1810  REM  MAIN_MENU()
+  1820  REM  
+  1841  HOME:
+        VTAB 21
+  1851  PRINT "FC-MAIN:[E]XECUTE [F]ILE [ESC]"
+  1861  LET OP$ = "FE":
+        GOSUB 64
+  1871  IF OP% < ZR THEN 
+          RETURN
+  1881  ON OP% GOSUB 2111,4111
+  1891  GOTO 1841
+  1901  REM  
+  1902  REM  TC=COMULATIVE_CHARGE(F[],CH%) 
+  1903  REM  
+  1910  LET TC = 0
+  1912  FOR L = 1 TO CH%:
+          LET TC = TC + F(L,2):
+        NEXT L
+  1914  LET TC = TC + INT(( RND(1) * 4 - 2) * 10000) / 10000
+  1920  RETURN
+  2111  REM      
+  2121  REM  FILE MENU
+  2131  REM  
+  2141  HOME:
+        VTAB 21:
+        PRINT "FILE:[S]AVE [P]UT-SCR [G]ET-SCR [ESC]"
+  2151  LET OP$ = "SPG":
+        GOSUB 64
+  2161  IF OP% < ZR THEN 
+          RETURN
+  2171  ON OP% GOSUB 2200,2300,2400
+  2180  GOTO 2141
+  2200  GOSUB 95:
+        RETURN
+  2300  LET N$ = "PUT":
+        GOSUB 2505
+  2305  IF OP% < ZR THEN 
+          RETURN
+  2310  PRINT DO$;"BSAVE FOG.SCR.";OP%;",A$2000,L$2000,D";D%;",S";S%
+  2315  RETURN
+  2400  LET N$ = "GET":
+        GOSUB 2505
+  2405  IF OP% < ZR THEN 
+          RETURN
+  2410  PRINT DO$;"BLOAD FOG.SCR.";OP%;",D";D%;",S";S%
+  2415  RETURN
+  2500  REM  - ASK WHICH IMAGE SLOT
+  2505  GOSUB 85
+  2508  IF OP% < ZR THEN 
+          RETURN
+  2510  PRINT N$;"#[1][2][3][4][5][6]:";:
+        LET OP$ = "123456":
+        GOSUB 64
+  2515  IF OP% < ZR THEN 
+          RETURN
+  2516  PRINT OP%
+  2520  RETURN
+  3000  REM  
+  3001  REM  SOLVE(F[],CH%)
+  3002  REM  
+  3010  POP:
+        POP: REM  TO WELCOME()
+  3011  PRINT "* INSERT THE RESULTS"
+  3012  LET KO% = 0
+  3014  FOR I2 = 1 TO CH%
+  3015    LET X0 = F(I2,0):
+          LET Y0 = F(I2,1)
+  3016    GOSUB 62
+  3020    PRINT "* CHARGE? [P]OS [N]EG:";:
+          LET OP$ = "PN":
+          GOSUB 64
+  3021    IF OP% < ZR THEN 
+            PRINT "GOTO 3016 
+  3022    IF OP% = 1 THEN 
+            PRINT "POSITIVE":
+            IF F(I2,2) = - 1 THEN 
+              LET KO% = KO% + 1
+  3023    IF OP% = 2 THEN 
+            PRINT "NEGATIVE":
+            IF F(I2,2) = 1 THEN 
+              LET KO% = KO% + 1
+  3026  NEXT 
+  3030  PRINT "* WAIT"
+  3040  FOR I = 1 TO 1500:
+        NEXT I
+  3050  IF KO% = 0 THEN 
+          PRINT "* RESULT 100% MATCH!":
+          GOTO 3200
+  3052  PRINT "* YOUR RESULTS DON'T MATCH"
+  3055  PRINT "* SCIENTIFIC COMUNITY AGREES AT ", INT(((CH% - KO%) / CH%) * 100);"%"
+  3200  PRINT "* PRESS [SPACE]":
+        LET OP$ = " ":
+        GOSUB 64:
+        RETURN
+  3210  END
+  4111  REM  
+  4121  REM  FIRE A CHARGE 
+  4131  REM  
+  4141  HOME:
+        VTAB 21
+  4151  PRINT "EXPERIMENT:[G]O [C]LEAR [S]OLVE [ESC]"
+  4161  LET OP$ = "GCS":
+        GOSUB 64
+  4165  IF OP% < ZR THEN 
+          RETURN
+  4171  ON OP% GOSUB 4500,4600,83
+  4181  GOTO 4141
+  4500  REM  FIRE A CHARGE 
+  4510  REM  
+  4550  LET OL = Q0:
+        LET MN = - 1:
+        LET MX = 1:
+        LET N$ = "CHARGE":
+        GOSUB 73:
+        LET Q0 = NU
+  4560  LET OL = V0:
+        LET MN = - 1:
+        LET MX = 1:
+        LET N$ = "VELOCITY":
+        GOSUB 73:
+        LET V0 = NU
+  4570  LET OL = FNRD(A0):
+        LET MN = 0:
+        LET MX = 359:
+        LET N$ = "ANGLE":
+        GOSUB 73:
+        LET A0 = FNDR(NU)
+  4580  GOSUB 71
+  4585  LET EN = EN + 1
+  4590  RETURN
+  4600  GOSUB 70:
+        GOSUB 94:
+        RETURN
+  4700  REM  
+  4702  REM  HEADER(T$,C8%) 
+  4705  REM 
+  4706  HOME
+  4707  PRINT TAB(C8% - 11);"FOG CHAMBER"
+  4709  VTAB 3:
+        HTAB 1
+  4710  FOR I = 1 TO C8% / 10
+  4720    PRINT "__________";
+  4725  NEXT I
+  4735  VTAB 2:
+        HTAB 11
+  4738  PRINT LEFT$("________________________________________", LEN(T$) + 2)
+  4740  VTAB 3:
+        HTAB 10
+  4750  PRINT "/ " + T$ + " \"
+  4760  VTAB 6
+  4790  RETURN
+  4800  REM  
+  4810  IF PEEK( - 16384) > 128 THEN 
+          RETURN
+  4820  LET L$ = "[" + K$ + "] ... "
+  4821  LET L% = 9: REM   LEN (L$)+1
+  4823  PRINT L$;
+  4825  LET L1% = C8% - L%
+  4827  LET WD$ = "":
+        LET LW% = 0
+  4830  FOR I = 1 TO LEN(T$)
+  4835    IF PEEK( - 16384) > = 128 THEN 
+            RETURN
+  4840    LET CH$ = MID$(T$,I,1)
+  4860    LET WD$ = WD$ + CH$
+  4865    LET LW% = LW% + 1
+  4866    IF CH$ = " " THEN 
+            GOSUB 4900
+  4870  NEXT I
+  4875  PRINT WD$
+  4880  RETURN
+  4900  IF LW% < L1%
+          GOTO 4910
+  4905  PRINT :
+        HTAB L%:
+        LET LW% = L%
+  4910  PRINT WD$;:
+        LET WD$ = ""
+  4920  RETURN
+  5000  REM  
+  5010  REM  WELCOME()
+  5020  REM  
+  5030  TEXT:
+        LET T$ = "MAIN MENU":
+        GOSUB 72:
+        LET EN = 1:
+        POKE - 16368,0
+  5090  LET K$ = "1":
+        T$     = "EASY MODE, FEW VISIBLE CHARGES. START FROM HERE":
+        GOSUB 68
+  5100  PRINT 
+  5110  LET K$ = "2":
+        LET T$ = "ADVENTURE MODE, FEW AND HIDDEN CHARGES. TRY THIS AFTER [1]":
+        GOSUB 68
+  5120  PRINT 
+  5130  LET K$ = "3":
+        LET T$ = "STUDENT MODE, A BUNCH OF VISIBLE CHARGES WAITS YOU":
+        GOSUB 68
+  5140  PRINT 
+  5150  LET K$ = "4":
+        LET T$ = "SCIENTIST MODE, THE UNKNOWN WAITS YOU!":
+        GOSUB 68
+  5160  PRINT 
+  5170  LET K$ = "5":
+        LET T$ = "OPEN AN OLD ARCHIVIE AND RESUME THE EXPERIMENT":
+        GOSUB 68
+  5175  PRINT 
+  5177  PRINT 
+  5178  IF PEEK( - 16384) > 128 THEN 
+          LET K$ = CHR$( PEEK( - 16384) - 128)
+  5180  IF K$ < > "I" AND K$ < > "C" AND K$ < > "1" AND K$ < > "2" AND K$ < > "3" AND K$ < > "4" AND K$ < > "5" AND K$ < > "~" AND K$ < > CHR$(27) THEN 
+          5030
+  5185  PRINT :
+        PRINT "[C]HANCE 80/40 [I]NFO OR 1-5:";
+  5190  LET OP$ = "IC12345":
+        GOSUB 64
+  5191  IF OP% < ZR
+          GOTO 99
+  5192  IF OP% < 3 THEN 
+          ON OP% GOSUB 74,75
+  5193  IF OP% = 7 THEN 
+          GOSUB 77
+  5194  IF OP% > = 3 AND OP% < 7 THEN 
+          ON OP% - 2 GOTO 5200,5210,5220,5230
+  5199  GOTO 76
+  5200  LET CH% = 3:
+        LET HI% = 0:
+        RETURN
+  5210  LET CH% = 4:
+        LET HI% = 1:
+        RETURN
+  5220  LET CH% = 8:
+        LET HI% = 0:
+        RETURN
+  5230  LET CH% = 9:
+        LET HI% = 1:
+        RETURN
+  5240  REM  
+  5241  REM  SWITCH_40_80_COL(C8%) 
+  5242  REM  
+  5243  IF C8% = 80 THEN 
+          LET C8% = 40:
+          GOTO 5245
+  5244  LET C8% = 80
+  5245  HOME:
+        IF C8% = 80 THEN 
+          PRINT CHR$(18)
+  5246  IF C8% = 40 THEN 
+          PRINT CHR$(17)
+  5247  RETURN
+  5300  REM 
+  5302  REM  INFORMATION()
+  5304  REM  
+  5310  LET T$ = "INFORMATION":
+        GOSUB 72
+  5320  PRINT "THIS IS A 2020'S APPLE II GAME."
+  5322  PRINT "ALESSIO PALMA ITALY"
+  5323  PRINT 
+  5324  PRINT "GITHUB SOURCE CODE:"
+  5326  PRINT "HTTPS://GITHUB.COM/SOMETHING"
+  5327  PRINT 
+  5328  :
+  5330  PRINT "HTTPS://FB.COM/ALESSIO.PALMA"
+  5332  PRINT :
+        PRINT 
+  5334  PRINT "[SPACE] OR [ESC] TO CONTINUE"
+  5340  LET OP$ = " ":
+        GOSUB 64
+  5350  RETURN
+  5400  REM  
+  5401  REM  ERROR_HANDLER()
+  5402  REM  
+  5405  LET ER% = PEEK(222)
+  5407  IF ER% = 255
+          GOTO 88
+  5409  IF ER% = 2
+          GOTO 82
+  5411  IF ER% = 7
+          GOTO 82
+  5415  IF ER% = 6
+          GOTO 86
+  5418  IF ER% = 4
+          GOTO 86
+  5420  IF ER% = 9
+          GOTO 86
+  5425  IF ER% = 10
+          GOTO 89
+  5427  IF ER% = 176
+          GOTO 89
+  5430  IF ER% = 254 THEN 
+          PRINT "* PLEASE INSERT THE DATA CORRECTLY ":
+          RESUME
+  5499  TEXT:
+        HTAB 0:
+        VTAB 22:
+        PRINT ER%:
+        END
+  5500  REM  
+  5501  REM  CTRL_C_HANDLER(ER%)
+  5502  REM  
+  5503  VTAB 23:
+        HTAB 0
+  5504  TEXT
+  5505  PRINT "PROGRAM TERMINATED BY THE USER"
+  5506  END
+  5530  PRINT ER%:
+        TEXT:
+        END
+  6000  REM  
+  6010  REM  MAIN()
+  6015  REM  
+  6020  GOSUB 78: REM  INITIALIZE()
+  6021  ONERR GOTO 6023
+  6022  C8% = 80:
+        PRINT DO$;"PR#3"
+  6023  IF PEEK(222) = 3 THEN 
+          C8% = 40
+  6024  ONERR GOTO 92
+  6025  GOSUB 76: REM  WELCOME()
+  6027  GOSUB 70: REM  DRAW_SCREEN()
+  6028  IF LO%
+          GOTO 6037
+  6030  GOSUB 82: REM  PLACE_CHARGES()
+  6037  GOSUB 94: REM  DISPLAY_MARKERS()
+  6040  GOSUB 90: REM  MAIN_MENU()
+  6100  GOTO 6025
+  7000  REM  
+  7005  REM  OPEN_ARCHIVIE()
+  7008  REM  
+  7010  LET T$ = "ARCHIVIE":
+        GOSUB 72
+  7015  LET K$ = "1":
+        LET T$ = "VISUALIZE DISK CONTENT (CATALOG)":
+        GOSUB 68
+  7017  PRINT 
+  7020  LET K$ = "2":
+        LET T$ = "OPEN AN OLD ARCHIVE AND RESUME THE EXPERIMENT":
+        GOSUB 68
+  7030  PRINT :
+        PRINT 
+  7040  PRINT "[ESC]APE TO RETURN OR 1-2:";
+  7045  LET OP$ = "12":
+        GOSUB 64
+  7050  IF OP% > Z < ZR THEN 
+          RETURN
+  7055  ON OP% GOSUB 7100,7200
+  7060  GOTO 77
+  7100  LET T$ = "CATALOG":
+        GOSUB 72
+  7110  PRINT 
+  7115  PRINT "[ESC]APE TO RETURN"
+  7116  PRINT 
+  7120  GOSUB 85
+  7170  PRINT :
+        PRINT "CTRL + S TO PAUSE THE LISTING"
+  7175  LET CM$ = "CAT":
+        IF C8% = 80 THEN 
+          LET CM$ = CM$ + "ALOG"
+  7180  PRINT DO$;CM$ + ",D";D%;",S";S%
+  7190  PRINT 
+  7192  PRINT "PRESS [SPACE] TO RETURN":
+        LET OP$ = " ":
+        GOSUB 64
+  7195  RETURN
+  7200  REM  
+  7202  REM  LOAD AN OLD EXPERIMENT
+  7204  REM  
+  7210  PRINT 
+  7220  GOSUB 85
+  7229  PRINT "[RETURN] WITH NO FILENAME TO EXIT"
+  7235  PRINT 
+  7240  INPUT "EXPERIMENT'S NAME:";FF$
+  7245  IF FF$ = "" THEN 
+          RETURN
+  7248  PRINT DO$;"OPEN ";FF$;",D";D%;",S";S%
+  7251  PRINT DO$;"READ ";FF$
+  7254  INPUT CH%
+  7255  INPUT HI%
+  7257  INPUT EN
+  7260  FOR I2 = 1 TO CH%
+  7263    INPUT F(I2,0)
+  7266    INPUT F(I2,1)
+  7269    INPUT F(I2,2)
+  7272  NEXT I2
+  7275  PRINT DO$;"CLOSE ";FF$
+  7278  POP
+  7281  POP
+  7283  LET LO% = 1
+  7284  RETURN
+  7500  REM  
+  7501  REM  SAVE_GAME()
+  7502  REM  
+  7509  PRINT "* SAVE GAME [Y][N]:";:
+        LET OP$ = "YN":
+        GOSUB 64
+  7512  IF OP% < ZR THEN 
+          RETURN
+  7513  IF OP% = 1 THEN 
+          PRINT "Y":
+          GOTO 7515
+  7514  RETURN
+  7515  GOSUB 85
+  7518  PRINT "* LEAVE BLANK TO ABORT"
+  7521  INPUT "* FILENAME:";FF$
+  7522  IF FF$ = "" THEN 
+          RETURN
+  7525  PRINT DO$;"OPEN ";FF$;",D";D%;",S";S%
+  7527  PRINT DO$;"WRITE ";FF$
+  7530  PRINT CH%
+  7532  PRINT HI%
+  7533  PRINT EN
+  7536  FOR I2 = 1 TO CH%
+  7539    PRINT F(I2,0)
+  7542    PRINT F(I2,1)
+  7545    PRINT F(I2,2)
+  7548  NEXT I2
+  7551  PRINT DO$;"CLOSE ";FF$
+  7554  RETURN
+  8000  REM  
+  8001  REM  GET_SLOT_AND_DRIVE()
+  8002  REM  
+  8005  IF S% > ZR AND D% > ZR THEN 
+          PRINT "-->CURRENT SELECTION D";D%;",S";S%
+  8010  PRINT "DISK SLOT ";
+  8020  PRINT "1-6:";:
+        OP$ = "123456"
+  8025  IF S% > ZR THEN 
+          OP$ = OP$ + CHR$(13)
+  8030  GOSUB 64:
+        IF OP% < ZR THEN 
+          POP:
+          RETURN
+  8033  IF OP% < 7 THEN 
+          LET S% = OP%
+  8040  PRINT S%:
+        PRINT "DISK NUMBER 1-2:";
+  8045  LET OP$ = "12":
+        IF D% > ZR THEN 
+          LET OP$ = OP$ + CHR$(13)
+  8046  GOSUB 64
+  8050  IF OP% < ZR THEN 
+          POP:
+          RETURN
+  8055  IF OP% < 3 THEN 
+          D% = OP%
+  8060  PRINT D%
+  8070  RETURN
+  9111  REM  
+  9121  REM  OP%=GET_OPTION(OP$)
+  9141  REM  
+  9151  WAIT - 16384,128:
+        A$ = CHR$( PEEK( - 16384) - 128):
+        POKE - 16368,0
+  9155  IF ASC(A$) = 27 THEN 
+          OP% = - 1:
+          RETURN
+  9161  FOR I = 1 TO LEN(OP$)
+  9171    IF A$ = MID$(OP$,I,1) THEN 
+            OP% = I:
+            RETURN
+  9181  NEXT 
+  9191  GOTO 9151
+  9999  REM  
+ 10000  REM  ENDGAME()
+ 10001  REM  
+ 10002  TEXT:
+        HOME
+ 10003  PRINT "PROGRAM TERMIANTED."
+ 10004  PRINT 
+ 10005  PRINT "FOG CHAMBER"
+ 10006  PRINT "2020'S APPLE ][ GAME"
+ 10007  PRINT "ALESSIO PALMA (IT)"
+ 10008  PRINT 
+ 10009  PRINT "THANKS FOR PLAYING"
+ 10010  END
+ 11111  REM  
+ 11121  REM  INITIALIZE()
+ 11122  REM  
+ 11123  LET EN  = 1
+ 11125  LET C8% = 80
+ 11127  LET W%  = 279:
+        LET H%  = 158:
+        LET ST% = 10:
+        LET WS% = W% / ST%
+ 11129  LET HS% = H% / 6
+ 11130  LET DO$ = CHR$(4)
+ 11133  REM  MAP VERT AND HOR. RES TO [-1,1]
+ 11134  DEF FNMX(X) = X / 139 - 1
+ 11136  DEF FNMY(Y) = - Y / 79 + 1
+ 11137  REM  MAP [-1,1] TO VERT AND HOR. RES.
+ 11138  DEF FNPX(X) = (1 + X) * 139
+ 11139  DEF FNPY(Y) = (1 - Y) * 79
+ 11141  LET PI  = 3.141592756
+ 11142  LET CO% = 3
+ 11143  LET P2  = PI / 2
+ 11144  LET DP  = 2 * PI
+ 11145  LET MM% = 200
+ 11150  DEF FNRD(R) = R / PI * 180
+ 11151  DIM F(10,3)
+ 11152  DEF FNDR(D) = D / 180 * PI
+ 11161  LET CH% = 10
+ 11171  LET Q0  = 1E - 4
+ 11173  LET V0  = 18E - 3
+ 11175  LET A0  = 0
+ 11178  LET LO% = 0
+ 11179  RETURN
