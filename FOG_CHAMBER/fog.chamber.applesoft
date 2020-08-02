@@ -259,7 +259,7 @@
   1701  REM  NU=FRIENDY_INPUT(OL,MN,MX)
   1702  REM  
   1710  :
-  1717  PRINT N%;" [";MN;",";MX;"] (";OL;"):";:
+  1717  PRINT N$;" [";MN;",";MX;"] (";OL;"):";:
         GOSUB 69
   1720  IF NU < MN THEN 
           PRINT "* TOO LOW":
@@ -528,7 +528,7 @@
   5322  PRINT "ALESSIO PALMA ITALY"
   5323  PRINT 
   5324  PRINT "GITHUB SOURCE CODE:"
-  5326  PRINT "HTTPS://GITHUB.COM/SOMETHING"
+  5326  PRINT "https://github.com/ozw1z5rd/AppleII/blob/master/FOG_CHAMBER"
   5327  PRINT 
   5328  :
   5330  PRINT "HTTPS://FB.COM/ALESSIO.PALMA"
@@ -612,7 +612,7 @@
   7040  PRINT "[ESC]APE TO RETURN OR 1-2:";
   7045  LET OP$ = "12":
         GOSUB 64
-  7050  IF OP% > Z < ZR THEN 
+  7050  IF OP% < ZR THEN 
           RETURN
   7055  ON OP% GOSUB 7100,7200
   7060  GOTO 77
